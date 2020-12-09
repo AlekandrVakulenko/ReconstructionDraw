@@ -12,9 +12,9 @@ clc
 % settings ------------------------
 Vect = [-2 2 0]; %basic vector
 BasicPoint = [2 0 0]; %basic point
-Trange = [-0.3 0.3]; %line parameter
+Trange = [-0.4 0.4]; %line parameter
 Radius = 0.04;
-NumberOfBins = 20;
+NumberOfBins = 200;
 ProjectionAxis = 'H';
 %----------------------------------
 

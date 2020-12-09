@@ -2,6 +2,11 @@
 function [BinCoord, SumIntInBin] = CylinderFrom3D(varargin)
 narginchk(10,11);
 
+% Matlab version control
+[~, MatlabYear] = version;
+MatlabYear = str2double(MatlabYear(end-3:end));
+
+
 % input arguments
 H1D = varargin{1}; % line array of H coord
 K1D = varargin{2}; % line array of K coord
@@ -163,11 +168,15 @@ for index = 1:NumberOfBins
     BinEnd = BinEdges(index+1);
     
     % Bin condition (Сylinder length from BinStart to BinEnd)
-    Condition = TransformedArray(1,:)>BinStart & TransformedArray(1,:)<BinEnd;
+    Condition = TransformedArray(1,:)>=BinStart & TransformedArray(1,:)<BinEnd;
     IntensityInBin = PartIntensity(Condition);
     
     NaNcondition = isnan(IntensityInBin);
-    SumIntInBin(index) = sum(IntensityInBin(~NaNcondition),'all');
+    if MatlabYear < 2019
+        SumIntInBin(index) = sum(IntensityInBin(~NaNcondition));
+    elseif MatlabYear>=2019
+        SumIntInBin(index) = sum(IntensityInBin(~NaNcondition),'all');
+    end
     
     % Draw Bins
     if Draw == 1
