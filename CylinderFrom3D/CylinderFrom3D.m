@@ -200,13 +200,13 @@ if Draw == 1
 end
 
 
-if ProjectionAxis~='H'
+if ProjectionAxis == 'H'
     BinCoord = outHgrid;
-elseif ProjectionAxis~='K'
+elseif ProjectionAxis == 'K'
     BinCoord = outKgrid;
-elseif ProjectionAxis~='L'
+elseif ProjectionAxis == 'L'
     BinCoord = outLgrid;
-elseif ProjectionAxis~='T'
+elseif ProjectionAxis == 'T'
     BinCoord = BinCenters;
 end
 
