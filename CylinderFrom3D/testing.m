@@ -5,6 +5,7 @@
 % load data
 load('main_3D_01.mat')
 
+% I1D(1:2:end) = NaN;
 
 %% function test 1
 clc
@@ -28,7 +29,6 @@ figure
 plot(BinCoord, SumIntInBin)
 set(gca,'yscale','log')
 title(['Projection to ' ProjectionAxis ' axis'])
-
 
 
 

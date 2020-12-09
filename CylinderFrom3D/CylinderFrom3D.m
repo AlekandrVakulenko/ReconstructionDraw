@@ -164,9 +164,10 @@ for index = 1:NumberOfBins
     
     % Bin condition (Сylinder length from BinStart to BinEnd)
     Condition = TransformedArray(1,:)>BinStart & TransformedArray(1,:)<BinEnd;
-    
     IntensityInBin = PartIntensity(Condition);
-    SumIntInBin(index) = sum(IntensityInBin,'all');
+    
+    NaNcondition = isnan(IntensityInBin);
+    SumIntInBin(index) = sum(IntensityInBin(~NaNcondition),'all');
     
     % Draw Bins
     if Draw == 1
@@ -186,6 +187,8 @@ for index = 1:NumberOfBins
 end
 % -------------------------------------------------------------------------
 
+% zeroing negative
+SumIntInBin(SumIntInBin<=0) = 0;
 
 % --------------- find projections of BinCenters to H, K, L ---------------
 MidValue = ([BinCenters; zeros(size(BinCenters)); zeros(size(BinCenters))])'/Matrix + BasicPoint;
