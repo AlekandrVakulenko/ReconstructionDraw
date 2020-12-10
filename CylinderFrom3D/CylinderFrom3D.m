@@ -1,3 +1,4 @@
+% V1.0.01
 
 function [BinCoord, MeanIntInBin] = CylinderFrom3D(varargin)
 narginchk(10,11);
@@ -226,7 +227,7 @@ MeanIntInBin(NaNcondition) = [];
 
 
 % --------------- find projections of BinCenters to H, K, L ---------------
-MidValue = ([BinCenters; zeros(size(BinCenters)); zeros(size(BinCenters))])'/Matrix + BasicPoint;
+MidValue = ([BinCenters; zeros(size(BinCenters)); zeros(size(BinCenters))])'/Matrix' + BasicPoint;
 OutHgrid = MidValue(:,1)';
 OutKgrid = MidValue(:,2)';
 OutLgrid = MidValue(:,3)';
