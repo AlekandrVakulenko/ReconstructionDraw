@@ -1,5 +1,5 @@
 
-function [BinCoord, SumIntInBin] = CylinderFrom3D(varargin)
+function [BinCoord, MeanIntInBin] = CylinderFrom3D(varargin)
 narginchk(10,11);
 
 % Matlab version control
@@ -81,6 +81,27 @@ end
 if size(I1D,2)~=1
     error('H1D, K1D, L1D, I1D must have the same size N-by-1')
 end
+
+% ----- projection check -----
+Vect = Vect./norm(Vect); %input vector normalization
+
+
+if ProjectionAxis == 'H'
+    PhaseMargin = abs(acosd(Vect(1))-90);
+    if PhaseMargin<5
+        error('PhaseMargin is too bad for projection on H axis')
+    end
+elseif ProjectionAxis == 'K'
+    PhaseMargin = abs(acosd(Vect(2))-90);
+    if PhaseMargin<5
+        error('PhaseMargin is too bad for projection on K axis')
+    end
+elseif ProjectionAxis == 'L'
+    PhaseMargin = abs(acosd(Vect(3))-90);
+    if PhaseMargin<5
+        error('PhaseMargin is too bad for projection on L axis')
+    end
+end
 % -----------------------------------------------------------------------
 
 
@@ -109,7 +130,6 @@ Lmax = max(L1D);
 
 % ------------------------------Find Cylinder------------------------------
 % CreateOrth
-Vect = Vect./norm(Vect);
 [orth1 orth2] = createOrth(Vect);
 Matrix = [Vect; orth1; orth2]; % transformation matrix / new coord = tM * vetc(col) in basic coord
 %-----------
@@ -160,7 +180,7 @@ if Draw == 1
     hold on
 end
 
-SumIntInBin = [];
+MeanIntInBin = [];
 for index = 1:NumberOfBins
     
     %current BinEdges
@@ -173,9 +193,9 @@ for index = 1:NumberOfBins
     
     NaNcondition = isnan(IntensityInBin);
     if MatlabYear < 2019
-        SumIntInBin(index) = sum(IntensityInBin(~NaNcondition));
-    elseif MatlabYear>=2019
-        SumIntInBin(index) = sum(IntensityInBin(~NaNcondition),'all');
+        MeanIntInBin(index) = mean(IntensityInBin(~NaNcondition));
+    elseif MatlabYear >= 2019
+        MeanIntInBin(index) = mean(IntensityInBin(~NaNcondition),'all');
     end
     
     % Draw Bins
@@ -197,30 +217,53 @@ end
 % -------------------------------------------------------------------------
 
 % zeroing negative
-SumIntInBin(SumIntInBin<=0) = 0;
+MeanIntInBin(MeanIntInBin<=0) = 0;
+
+% find NaN in output
+NaNcondition = isnan(MeanIntInBin);
+BinCenters(NaNcondition) = [];
+MeanIntInBin(NaNcondition) = [];
+
 
 % --------------- find projections of BinCenters to H, K, L ---------------
 MidValue = ([BinCenters; zeros(size(BinCenters)); zeros(size(BinCenters))])'/Matrix + BasicPoint;
-outHgrid = MidValue(:,1);
-outKgrid = MidValue(:,2);
-outLgrid = MidValue(:,3);
+OutHgrid = MidValue(:,1)';
+OutKgrid = MidValue(:,2)';
+OutLgrid = MidValue(:,3)';
 % -------------------------------------------------------------------------
 
 % Draw BinCenters points
 if Draw == 1
-    plot3(outHgrid,outKgrid,outLgrid,'o','markersize',8,'markerfacecolor','b')
+    plot3(OutHgrid,OutKgrid,OutLgrid,'o','markersize',8,'markerfacecolor','b')
 end
 
+
+% Tstep,Hstep,Kstep,Lstep are steps between points along T,H,K,L
+Tstep = mean(abs(diff(BinCenters)));
+Hstep = mean(abs(diff(OutHgrid)));
+Kstep = mean(abs(diff(OutKgrid)));
+Lstep = mean(abs(diff(OutLgrid)));
 
 if ProjectionAxis == 'H'
-    BinCoord = outHgrid;
+    BinCoord = OutHgrid; %output grid
+    MeanIntInBin = MeanIntInBin*(pi*Radius^2)*Tstep/Hstep; %integration
+    
 elseif ProjectionAxis == 'K'
-    BinCoord = outKgrid;
+    BinCoord = OutKgrid; %output grid
+    MeanIntInBin = MeanIntInBin*(pi*Radius^2)*Tstep/Kstep; %integration
+    
 elseif ProjectionAxis == 'L'
-    BinCoord = outLgrid;
+    BinCoord = OutLgrid; %output grid
+    MeanIntInBin = MeanIntInBin*(pi*Radius^2)*Tstep/Lstep; %integration
+    
 elseif ProjectionAxis == 'T'
-    BinCoord = BinCenters;
+    BinCoord = BinCenters; %output grid
+    MeanIntInBin = MeanIntInBin*(pi*Radius^2); %integration
+    
 end
+
+
+
 
 
 end

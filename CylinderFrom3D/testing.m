@@ -8,11 +8,11 @@ load('main_3D_01.mat')
 % I1D(1:2:end) = NaN;
 
 %% function test 1
-clc
+% clc
 % settings ------------------------
-Vect = [-2 2 0]; %basic vector
+Vect = [1 1 0]; %basic vector
 BasicPoint = [2 0 0]; %basic point
-Trange = [-0.4 0.4]; %line parameter
+Trange = [-0.7 0.7]; %line parameter
 Radius = 0.04;
 NumberOfBins = 200;
 ProjectionAxis = 'H';
@@ -25,10 +25,15 @@ ProjectionAxis = 'H';
     Radius, NumberOfBins, ProjectionAxis);
 
 
-figure
+% figure
+hold on
 plot(BinCoord, SumIntInBin)
 set(gca,'yscale','log')
 title(['Projection to ' ProjectionAxis ' axis'])
+
+trapz(BinCoord, SumIntInBin)
+
+
 
 
 
@@ -60,7 +65,6 @@ title(['Projection to ' ProjectionAxis ' axis'])
 
 
 %%
-
 
 
 
