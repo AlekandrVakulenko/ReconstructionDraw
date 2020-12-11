@@ -1,4 +1,12 @@
-% V1.0.01
+% V1.1.0
+
+% Release notes:
+% V1.0.01:
+% First release
+% 
+% V1.1.0:
+% New faster cases for Vect == [1 0 0] or [0 1 0] or [0 0 1]
+%
 
 function [BinCoord, MeanIntInBin] = CylinderFrom3D(varargin)
 narginchk(10,11);
@@ -52,9 +60,9 @@ if round(NumberOfBins) ~= NumberOfBins
     warning('NumberOfBins was rounded')
 end
 
-if ProjectionAxis~='H' & ...
-        ProjectionAxis~='K' & ...
-        ProjectionAxis~='L' & ...
+if ProjectionAxis~='H' && ...
+        ProjectionAxis~='K' && ...
+        ProjectionAxis~='L' && ...
         ProjectionAxis~='T'
     error('ProjectionAxis cloud by only ''H'', ''K'', ''L'', ''T''')
 end
@@ -63,7 +71,7 @@ Nh = numel(H1D);
 Nk = numel(K1D);
 Nl = numel(L1D);
 Ni = numel(I1D);
-if Nh~=Nk | Nh~=Nl | Nh~=Ni
+if Nh~=Nk || Nh~=Nl || Nh~=Ni
     error('H1D, K1D, L1D, I1D must have the same size N-by-1')
 end
 
@@ -84,6 +92,11 @@ if size(I1D,2)~=1
 end
 
 % ----- projection check -----
+NumberOfZerosInVect = numel(find(Vect==0));
+if NumberOfZerosInVect == 3
+    error('Direction is zero vector')
+end
+
 Vect = Vect./norm(Vect); %input vector normalization
 
 
@@ -109,42 +122,57 @@ end
 
 if DrawCmd == "Draw"
     Draw = 1;
+    
+    % Find [min max] for H, K, L
+    Hmin = min(H1D);
+    Hmax = max(H1D);
+    Kmin = min(K1D);
+    Kmax = max(K1D);
+    Lmin = min(L1D);
+    Lmax = max(L1D);
+    
     figure
 else
     Draw = 0;
 end
-
-
-% Find [min max] for H, K, L
-Hmin = min(H1D);
-Hmax = max(H1D);
-Kmin = min(K1D);
-Kmax = max(K1D);
-Lmin = min(L1D);
-Lmax = max(L1D);
-% DEBUG 3 lines
-[Hmin Hmax];
-[Kmin Kmax];
-[Lmin Lmax];
 %----------------------------------
 
 
-% ------------------------------Find Cylinder------------------------------
-% CreateOrth
-[orth1 orth2] = createOrth(Vect);
-Matrix = [Vect; orth1; orth2]; % transformation matrix / new coord = tM * vetc(col) in basic coord
-%-----------
 
-% convet coord
-TransformedArray = Matrix*([H1D, K1D, L1D]' - BasicPoint');
-% First coordinate of TransformedArray is a cylinder length (natural parameterization),
-% directed in Vect. Another two coordinates of TA are chosen arbitrarily with 90deg to main.
-%-------------
+% ------------------------------Find Cylinder------------------------------
+
+if NumberOfZerosInVect == 2
+%     'case 1'
+    TransformedArray = ([H1D, K1D, L1D]' - BasicPoint');
+    
+    AlongIndex = find(Vect ~= 0);
+    
+    OrthIndex1 = mod(AlongIndex,3)+1;
+    OrthIndex2 = mod(AlongIndex+1,3)+1;
+    FullConversionDone = 0;
+else
+%     'case 2'
+    % CreateOrth
+    [Orth1, Orth2] = createOrth(Vect);
+    Matrix = [Vect; Orth1; Orth2]; % transformation matrix / new coord = tM * vetc(col) in basic coord
+    %-----------
+    
+    % convet coord
+    TransformedArray = Matrix*([H1D, K1D, L1D]' - BasicPoint');
+    % First coordinate of TransformedArray is a cylinder length (natural parameterization),
+    % directed in Vect. Another two coordinates of TA are chosen arbitrarily with 90deg to main.
+    %-------------
+    AlongIndex = 1;
+    OrthIndex1 = 2;
+    OrthIndex2 = 3;
+    FullConversionDone = 1;
+end
+
 
 % Radius condition
-Condition1 = TransformedArray(2,:).^2 + TransformedArray(3,:).^2 <= Radius.^2;
-% Сylinder length condition
-Condition2 = TransformedArray(1,:)>Trange(1) & TransformedArray(1,:)<Trange(2);
+Condition1 = TransformedArray(OrthIndex1,:).^2 + TransformedArray(OrthIndex2,:).^2 <= Radius.^2;
+% Cylinder length condition
+Condition2 = TransformedArray(AlongIndex,:)>Trange(1) & TransformedArray(AlongIndex,:)<Trange(2);
 % full condition
 Condition = Condition1 & Condition2;
 %-----------------
@@ -181,7 +209,7 @@ if Draw == 1
     hold on
 end
 
-MeanIntInBin = [];
+MeanIntInBin = zeros(1,NumberOfBins);
 for index = 1:NumberOfBins
     
     %current BinEdges
@@ -189,7 +217,7 @@ for index = 1:NumberOfBins
     BinEnd = BinEdges(index+1);
     
     % Bin condition (Сylinder length from BinStart to BinEnd)
-    Condition = TransformedArray(1,:)>=BinStart & TransformedArray(1,:)<BinEnd;
+    Condition = TransformedArray(AlongIndex,:)>=BinStart & TransformedArray(AlongIndex,:)<BinEnd;
     IntensityInBin = PartIntensity(Condition);
     
     NaNcondition = isnan(IntensityInBin);
@@ -227,11 +255,22 @@ MeanIntInBin(NaNcondition) = [];
 
 
 % --------------- find projections of BinCenters to H, K, L ---------------
-MidValue = ([BinCenters; zeros(size(BinCenters)); zeros(size(BinCenters))])'/Matrix' + BasicPoint;
-OutHgrid = MidValue(:,1)';
-OutKgrid = MidValue(:,2)';
-OutLgrid = MidValue(:,3)';
+if FullConversionDone == 1
+    MidValue = ([BinCenters; zeros(size(BinCenters)); zeros(size(BinCenters))])'/Matrix' + BasicPoint;
+    OutHgrid = MidValue(:,1)';
+    OutKgrid = MidValue(:,2)';
+    OutLgrid = MidValue(:,3)';
+else
+    MidMatrix = zeros(3,numel(BinCenters));
+    MidMatrix(AlongIndex,:) = BinCenters;
+    
+    MidValue = (MidMatrix)' + BasicPoint;
+    OutHgrid = MidValue(:,1)';
+    OutKgrid = MidValue(:,2)';
+    OutLgrid = MidValue(:,3)';
+end
 % -------------------------------------------------------------------------
+
 
 % Draw BinCenters points
 if Draw == 1
@@ -260,11 +299,7 @@ elseif ProjectionAxis == 'L'
 elseif ProjectionAxis == 'T'
     BinCoord = BinCenters; %output grid
     MeanIntInBin = MeanIntInBin*(pi*Radius^2); %integration
-    
 end
-
-
-
 
 
 end
