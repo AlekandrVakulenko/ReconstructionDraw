@@ -7,17 +7,7 @@ Points(2).X = -1.5-0.1;
 Points(2).Y = 1.5;
 
 
-[LatPar, Angle] = latticefind(Points, true)
-
-
-
-
-
-
-
-
-
-
+[LatPar, Angle] = latticefind(Points, 90);
 
 
 
