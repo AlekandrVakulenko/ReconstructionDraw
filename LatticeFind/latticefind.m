@@ -23,17 +23,17 @@ InitialSwarm = [InitDatPar InitAngle];
 
 % solution finding
 modelF = @(v) model(v(:,1), v(:,2), Points, LatticeAngle, false);
-MaxSwarm = 20;
+MaxSwarm = 1000;
 Options = optimoptions('particleswarm','SwarmSize',MaxSwarm, ...
     'UseParallel',false, ...
     'MaxIterations', MaxSwarm*20, ...
     'MaxStallIterations', 10, ...
-    'FunctionTolerance', 1e-9, ...
+    'FunctionTolerance', 1e-12, ...
     'ObjectiveLimit', -inf, ...
     'DisplayInterval', 1, ...
     'InitialSwarmMatrix', InitialSwarm,...
     'UseVectorized', false, ...
-    'PlotFcn',[],'Display','none'); %PlotFcn pswplotbestf/[] Display iter/none
+    'PlotFcn',[],'Display','iter'); %PlotFcn pswplotbestf/[] Display iter/none
 %         D   angle
 Lower = [  0.5     0];
 Upper = [ 10      360]; %FIXME create input parameter for limits
@@ -66,7 +66,9 @@ y2 = LatPar*sind(Angle+LatticeAngle);
 Dist1 = ((x1-px1).^2 + (y1-py1).^2).^0.5;
 Dist2 = ((x2-px2).^2 + (y2-py2).^2).^0.5;
 
-out = ((Dist1).^2+(Dist2).^2);
+W1 = 20;
+W2 = 1;
+out = W1*(Dist1 - Dist2).^2 + W2*((Dist1).^2+(Dist2).^2);
 
 if DrawCmd
     figure
@@ -75,12 +77,14 @@ if DrawCmd
     plot([x2 0], [y2 0], 'b' ,'linewidth', 1)
     plot(px1, py1, 'r.', 'markersize', 12)
     plot(px2, py2, 'r.', 'markersize', 12)
-    xlim([-3 3])
-    ylim([-3 3])
+%     xlim([-3 3])
+%     ylim([-3 3])
     xline(0);
     yline(0);
     axis equal
-    
+    disp(' ')
+    disp(['Delta = ' num2str(abs(Dist1-Dist2))])
+
 end
 end
 
