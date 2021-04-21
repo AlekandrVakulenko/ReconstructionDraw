@@ -72,23 +72,23 @@ Nk = numel(K1D);
 Nl = numel(L1D);
 Ni = numel(I1D);
 if Nh~=Nk || Nh~=Nl || Nh~=Ni
-    error('H1D, K1D, L1D, I1D must have the same size N-by-1')
+    error('H1D, K1D, L1D, I1D have different number of elements')
 end
 
 if size(H1D,2)~=1
-    error('H1D, K1D, L1D, I1D must have the same size N-by-1')
+    error('H1D must be array of N-by-1')
 end
 
 if size(K1D,2)~=1
-    error('H1D, K1D, L1D, I1D must have the same size N-by-1')
+    error('K1D must be array of N-by-1')
 end
 
 if size(L1D,2)~=1
-    error('H1D, K1D, L1D, I1D must have the same size N-by-1')
+    error('L1D must be array of N-by-1')
 end
 
 if size(I1D,2)~=1
-    error('H1D, K1D, L1D, I1D must have the same size N-by-1')
+    error('I1D must be array of N-by-1')
 end
 
 % ----- projection check -----
